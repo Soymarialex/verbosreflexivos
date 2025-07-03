@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empareja Pronombres y Verbos Reflexivos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex; /* Changed to flex to accommodate sidebar */
+            min-height: 100vh;
+            margin: 0;
+            padding: 0; /* Remove body padding */
+            box-sizing: border-box;
+        }
+        #sidebar {
+            width: 250px;
+            background-color: #2c3e50; /* Dark blue-gray for sidebar */
+            padding: 20px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-shrink: 0; /* Prevent sidebar from shrinking */
+        }
+        #sidebar h2 {
+            color: #ffffff;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .sidebar-button {
+            background-color: #4CAF50; /* Green */
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-align: center;
+        }
+        .sidebar-button:hover {
+            background-color: #66bb6a; /* Lighter green on hover */
+            transform: translateX(3px);
+        }
+        .sidebar-button.active {
+            background-color: #3f51b5; /* Indigo when active */
+            box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.5);
+        }
+        #game-content { /* New container for game part */
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        #game-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50; /* Dark blue-gray */
+            margin-bottom: 20px;
+        }
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .card {
+            background-color: #e0f2f7; /* Light cyan */
+            color: #00796b; /* Dark cyan */
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 60px;
+            text-transform: capitalize; /* Capitalize the first letter of each word */
+        }
+        .card:hover:not(.matched):not(.selected) {
+            background-color: #b2ebf2; /* Lighter cyan on hover */
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        .card.selected {
+            border-color: #3f51b5; /* Indigo */
+            background-color: #c5cae9; /* Light indigo */
+            color: #1a237e; /* Darker indigo */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+        .card.matched {
+            background-color: #a5d6a7; /* Light green */
+            color: #2e7d32; /* Dark green */
+            cursor: default;
+            opacity: 0.7;
+            border-color: #4caf50; /* Green */
+        }
+        .card.hidden {
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            height: 0; /* Collapse element when hidden */
+            padding: 0;
+            margin: 0;
+            transition: all 0.3s ease-out;
+        }
+        .card.incorrect {
+            animation: shake 0.3s;
+            border-color: #ef5350; /* Red */
+            background-color: #ffcdd2; /* Light red */
+            color: #d32f2f; /* Dark red */
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        #sentence-display {
+            min-height: 70px;
+            background-color: #bbdefb; /* Light blue */
+            color: #1565c0; /* Dark blue */
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 1.4rem;
+            font-weight: 500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease;
+        }
+        #next-button {
+            background-color: #4caf50; /* Green */
+            color: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            display: none; /* Hidden by default */
+            margin-top: 20px;
+        }
+        #next-button:hover {
+            background-color: #66bb6a; /* Lighter green on hover */
+            transform: translateY(-2px);
+        }
+        #completion-message {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2e7d32;
+            display: none;
+            margin-top: 30px;
+        }
+        #current-verb-display {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1a237e; /* Darker indigo */
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background-color: #e8eaf6;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Verbos</h2>
+        </div>
+
+    <div id="game-content">
+        <div id="game-container">
+            <div id="current-verb-display"></div>
+            <div id="sentence-display">¡Empieza a emparejar!</div>
+
+            <div>
+                <h3 class="section-title">Pronombres</h3>
+                <div id="pronoun-grid" class="card-grid">
+                    </div>
+            </div>
+
+            <div>
+                <h3 class="section-title">Formas Conjugadas</h3>
+                <div id="verb-grid" class="card-grid">
+                    </div>
+            </div>
+
+            <button id="next-button" class="mt-8">Siguiente Verbo</button>
+            <div id="completion-message">¡Felicidades! Has completado todas las actividades.</div>
+        </div>
+    </div>
+
+    <script>
+        // Data structure for verbs, their present simple forms, and example sentences
+        const verbsData = [
+            {
+                infinitive: "despertarse",
+                conjugations: {
+                    "yo": { form: "me despierto", sentence: "Yo me despierto muy temprano los fines de semana." },
+                    "tú": { form: "te despiertas", sentence: "¿Tú te despiertas con el sonido del despertador?" },
+                    "él/ella/usted": { form: "se despierta", sentence: "Él se despierta lentamente cada mañana." },
+                    "nosotros": { form: "nos despertamos", sentence: "Nosotros nos despertamos para ver el amanecer." },
+                    "ellos/ellas/ustedes": { form: "se despiertan", sentence: "Ellos se despiertan rápidamente al oír la música." }
+                }
+            },
+            {
+                infinitive: "acostarse",
+                conjugations: {
+                    "yo": { form: "me acuesto", sentence: "Yo me acuesto tarde viendo series." },
+                    "tú": { form: "te acuestas", sentence:"¿Te acuestas a leer un libro antes de dormir?"},
+                    "él/ella/usted": { form: "se acuesta", sentence: "Ella se acuesta después de preparar todo para el día siguiente." },
+                    "nosotros": { form: "nos acostamos", sentence: "Nosotros nos acostamos cuando estamos muy cansados." },
+                    "ellos/ellas/ustedes": { form: "se acuestan", sentence: "Ustedes se acuestan a la misma hora cada noche." }
+                }
+            },
+            {
+                infinitive: "vestirse",
+                conjugations: {
+                    "yo": { form: "me visto", sentence: "Yo me visto con ropa cómoda para estar en casa." },
+                    "tú": { form: "te vistes", sentence: "Tú te vistes elegante para el evento." },
+                    "él/ella/usted": { form: "se viste", sentence: "Usted se viste muy bien para ir a trabajar." },
+                    "nosotros": { form: "nos vestimos", sentence: "Nosotros nos vestimos de acuerdo al clima." },
+                    "ellos/ellas/ustedes": { form: "se visten", sentence: "Ellas se visten con los colores de moda." }
+                }
+            },
+            {
+                infinitive: "desvestirse",
+                conjugations: {
+                    "yo": { form: "me desvisto", sentence: "Yo me desvisto tan pronto llego a casa." },
+                    "tú": { form: "te desvistes", sentence: "¿Te desvistes antes de ducharte?" },
+                    "él/ella/usted": { form: "se desviste", sentence: "Él se desviste y se pone el pijama." },
+                    "nosotros": { form: "nos desvestimos", sentence: "Nosotros nos desvestimos para meternos en la piscina." },
+                    "ellos/ellas/ustedes": { form: "se desvisten", sentence: "Ellos se desvisten para ir a nadar." }
+                }
+            },
+            {
+                infinitive: "despedirse",
+                conjugations: {
+                    "yo": { form: "me despido", sentence: "Yo me despido de mi familia antes de viajar." },
+                    "tú": { form: "te despides", sentence: "Tú siempre te despides con un abrazo." },
+                    "él/ella/usted": { form: "se despide", sentence: "Ella se despide de todos antes de salir." },
+                    "nosotros": { form: "nos despedimos", sentence: "Nosotros nos despedimos de nuestros amigos en el aeropuerto." },
+                    "ellos/ellas/ustedes": { form: "se despiden", sentence: "Ustedes se despiden con una sonrisa." }
+                }
+            },
+            {
+                infinitive: "divertirse",
+                conjugations: {
+                    "yo": { form: "me divierto", sentence: "Yo me divierto mucho jugando videojuegos." },
+                    "tú": { form: "te diviertes", sentence: "¿Te diviertes cuando sales con tus amigos?" },
+                    "él/ella/usted": { form: "se divierte", sentence: "Usted se divierte en la fiesta." },
+                    "nosotros": { form: "nos divertimos", sentence: "Nosotros nos divertimos explorando nuevos lugares." },
+                    "ellos/ellas/ustedes": { form: "se divierten", sentence: "Ellos se divierten bailando toda la noche." }
+                }
+            },
+            {
+                infinitive: "reírse",
+                conjugations: {
+                    "yo": { form: "me río", sentence: "Yo me río muchos con esa comedia." },
+                    "tú": { form: "te ríes", sentence: "Tú te ríes de todas las bromas." },
+                    "él/ella/usted": { form: "se ríe", sentence: "Ella se ríe nerviosamente cuando se equivoca." },
+                    "nosotros": { form: "nos reímos", sentence: "Nosotros nos reímos de los chistes malos." },
+                    "ellos/ellas/ustedes": { form: "se ríen", sentence: "Ustedes se ríen fácilmente con cualquier cosa." }
+                }
+            }
+        ];
+
+        // DOM elements
+        const sidebar = document.getElementById('sidebar');
+        const pronounGrid = document.getElementById('pronoun-grid');
+        const verbGrid = document.getElementById('verb-grid');
+        const sentenceDisplay = document.getElementById('sentence-display');
+        const nextButton = document.getElementById('next-button');
+        const completionMessage = document.getElementById('completion-message');
+        const currentVerbDisplay = document.getElementById('current-verb-display');
+        const gameContainer = document.getElementById('game-container'); // Get the game-container
+
+        // Game state variables
+        let currentVerbIndex = 0;
+        let selectedPronoun = null;
+        let selectedVerbForm = null;
+        let matchedPairsCount = 0;
+
+        // Pronouns to display (excluding 'vosotros' and combining 3rd persons)
+        const pronouns = ["yo", "tú", "él/ella/usted", "nosotros", "ellos/ellas/ustedes"];
+        const totalPairsPerVerb = pronouns.length; // Will be 5 pairs per verb
+
+        /**
+         * Shuffles an array in place using the Fisher-Yates (Knuth) algorithm.
+         * @param {Array} array The array to shuffle.
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        /**
+         * Renders the pronoun cards in the grid.
+         */
+        function renderPronouns() {
+            pronounGrid.innerHTML = ''; // Clear previous pronouns
+            pronouns.forEach(pronoun => {
+                const card = document.createElement('div');
+                card.classList.add('card', 'rounded-xl', 'cursor-pointer');
+                card.textContent = pronoun;
+                card.dataset.type = 'pronoun';
+                card.dataset.value = pronoun;
+                card.addEventListener('click', handleCardClick);
+                pronounGrid.appendChild(card);
+            });
+        }
+
+        /**
+         * Renders the verb form cards for the current verb in the grid.
+         */
+        function renderVerbForms() {
+            verbGrid.innerHTML = ''; // Clear previous verb forms
+            const currentVerb = verbsData[currentVerbIndex];
+            const verbForms = Object.keys(currentVerb.conjugations).map(key => ({
+                pronoun: key,
+                form: currentVerb.conjugations[key].form,
+                sentence: currentVerb.conjugations[key].sentence
+            }));
+
+            shuffleArray(verbForms); // Shuffle verb forms for variety
+
+            verbForms.forEach(form => {
+                const card = document.createElement('div');
+                card.classList.add('card', 'rounded-xl', 'cursor-pointer');
+                card.textContent = form.form;
+                card.dataset.type = 'verb';
+                card.dataset.value = form.form;
+                card.dataset.pronounMatch = form.pronoun; // Store the pronoun it matches with
+                card.dataset.sentence = form.sentence; // Store the sentence
+                card.addEventListener('click', handleCardClick);
+                verbGrid.appendChild(card);
+            });
+        }
+
+        /**
+         * Handles the click event on both pronoun and verb cards.
+         * @param {Event} event The click event.
+         */
+        function handleCardClick(event) {
+            const clickedCard = event.target;
+
+            // Do nothing if card is already matched or incorrect (during animation)
+            if (clickedCard.classList.contains('matched') || clickedCard.classList.contains('incorrect')) {
+                return;
+            }
+
+            if (clickedCard.dataset.type === 'pronoun') {
+                // Deselect previous pronoun if any
+                if (selectedPronoun) {
+                    selectedPronoun.classList.remove('selected');
+                }
+                selectedPronoun = clickedCard;
+                selectedPronoun.classList.add('selected');
+            } else if (clickedCard.dataset.type === 'verb') {
+                // Deselect previous verb if any
+                if (selectedVerbForm) {
+                    selectedVerbForm.classList.remove('selected');
+                }
+                selectedVerbForm = clickedCard;
+                selectedVerbForm.classList.add('selected');
+            }
+
+            // Check for a match if both are selected
+            if (selectedPronoun && selectedVerbForm) {
+                checkMatch();
+            }
+        }
+
+        /**
+         * Checks if the selected pronoun and verb form constitute a correct match.
+         */
+        function checkMatch() {
+            const currentVerbData = verbsData[currentVerbIndex];
+            // The pronoun from the selectedVerbForm's dataset is the key to find the correct conjugation
+            const correctImperative = currentVerbData.conjugations[selectedPronoun.dataset.value].form;
+
+            if (selectedVerbForm.dataset.value === correctImperative) {
+                // Correct match!
+                // Only display the sentence without "¡Correcto! Ejemplo:"
+                sentenceDisplay.textContent = `"${currentVerbData.conjugations[selectedPronoun.dataset.value].sentence}"`;
+                sentenceDisplay.style.backgroundColor = '#bbdefb'; // Reset background color
+                sentenceDisplay.style.color = '#1565c0'; // Reset text color
+
+                // Mark both cards as matched and disable them
+                selectedPronoun.classList.remove('selected');
+                selectedVerbForm.classList.remove('selected');
+                selectedPronoun.classList.add('matched');
+                selectedVerbForm.classList.add('matched');
+
+                // Optionally hide the matched cards
+                setTimeout(() => {
+                    selectedPronoun.classList.add('hidden');
+                    selectedVerbForm.classList.add('hidden');
+                }, 300); // Give a brief moment to see the matched state
+
+                matchedPairsCount++;
+                selectedPronoun = null;
+                selectedVerbForm = null;
+
+                if (matchedPairsCount === totalPairsPerVerb) {
+                    setTimeout(() => {
+                        nextButton.style.display = 'block';
+                    }, 500); // Show next button after cards are hidden
+                }
+            } else {
+                // Incorrect match
+                sentenceDisplay.textContent = "¡Incorrecto! Inténtalo de nuevo.";
+                sentenceDisplay.style.backgroundColor = '#ffcdd2'; // Light red for error
+                sentenceDisplay.style.color = '#d32f2f'; // Dark red for error
+
+                // Add incorrect class for animation and then remove
+                selectedPronoun.classList.add('incorrect');
+                selectedVerbForm.classList.add('incorrect');
+
+                setTimeout(() => {
+                    selectedPronoun.classList.remove('selected', 'incorrect');
+                    selectedVerbForm.classList.remove('selected', 'incorrect');
+                    selectedPronoun = null;
+                    selectedVerbForm = null;
+                    sentenceDisplay.textContent = "¡Intenta de nuevo!"; // Reset message after incorrect attempt
+                    sentenceDisplay.style.backgroundColor = '#bbdefb'; // Reset background color
+                    sentenceDisplay.style.color = '#1565c0'; // Reset text color
+                }, 800); // Allow shake animation to complete
+            }
+        }
+
+        /**
+         * Initializes the game with the current verb.
+         * @param {number} verbIndex The index of the verb to load.
+         */
+        function initializeGame(verbIndex) {
+            currentVerbIndex = verbIndex; // Set the current verb index from the parameter
+
+            if (currentVerbIndex < verbsData.length) {
+                const currentVerb = verbsData[currentVerbIndex];
+                currentVerbDisplay.textContent = `Verbo: ${currentVerb.infinitive}`;
+                sentenceDisplay.textContent = "¡Empieza a emparejar!";
+                sentenceDisplay.style.backgroundColor = '#bbdefb'; // Reset background color
+                sentenceDisplay.style.color = '#1565c0'; // Reset text color
+                nextButton.style.display = 'none';
+                completionMessage.style.display = 'none';
+
+                // Ensure game elements are visible
+                currentVerbDisplay.style.display = 'block';
+                sentenceDisplay.style.display = 'flex'; // Use flex as defined in CSS
+                pronounGrid.style.display = 'grid'; // Use grid as defined in CSS
+                verbGrid.style.display = 'grid'; // Use grid as defined in CSS
+                gameContainer.style.display = 'flex'; // Ensure game container is visible
+
+                matchedPairsCount = 0;
+                selectedPronoun = null;
+                selectedVerbForm = null;
+
+                renderPronouns(); // Always render pronouns, they don't change
+                renderVerbForms();
+                updateSidebarActiveButton(); // Update active button in sidebar
+            } else {
+                // Game completed
+                currentVerbDisplay.style.display = 'none';
+                sentenceDisplay.style.display = 'none';
+                pronounGrid.style.display = 'none';
+                verbGrid.style.display = 'none';
+                nextButton.style.display = 'none';
+                completionMessage.style.display = 'block';
+                gameContainer.style.display = 'block'; // Adjust display for completion message
+            }
+        }
+
+        /**
+         * Creates and renders the sidebar buttons.
+         */
+        function renderSidebar() {
+            sidebar.innerHTML = '<h2>Verbos</h2>'; // Clear and add title
+            verbsData.forEach((verb, index) => {
+                const button = document.createElement('button');
+                button.classList.add('sidebar-button');
+                button.textContent = verb.infinitive;
+                button.dataset.verbIndex = index;
+                button.addEventListener('click', () => {
+                    initializeGame(index); // Load the game for the clicked verb
+                });
+                sidebar.appendChild(button);
+            });
+            updateSidebarActiveButton(); // Set initial active button
+        }
+
+        /**
+         * Updates the active state of sidebar buttons.
+         */
+        function updateSidebarActiveButton() {
+            const buttons = sidebar.querySelectorAll('.sidebar-button');
+            buttons.forEach((button, index) => {
+                if (index === currentVerbIndex) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        }
+
+        // Event listener for the "Next" button
+        nextButton.addEventListener('click', () => {
+            currentVerbIndex++;
+            initializeGame(currentVerbIndex);
+        });
+
+        // Initialize the sidebar and the first game on window load
+        window.onload = () => {
+            renderSidebar();
+            initializeGame(0); // Start with the first verb
+        };
+    </script>
+</body>
+</html>
